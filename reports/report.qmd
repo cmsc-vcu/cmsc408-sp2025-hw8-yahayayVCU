@@ -2,14 +2,21 @@
 title: Homework 8 - World Bank Analysis
 ---
 
-GITHUB URL:  <https://github.com/cmsc-vcu/cmsc408-sp2025-hw8-jleonard99>
+GITHUB URL:  <https://github.com/cmsc-vcu/cmsc408-sp2025-hw8-yahayayVCU.git>
 
 
 # Problem Background
 
 
 ```{python}
-from helpers import create_database_engine, run_sql_and_return_df, run_sql_and_return_html, create_db_wrapper, execute_ddl_from_file, execute_ddl
+from helpers import ( 
+  create_database_engine, 
+  run_sql_and_return_df, 
+  run_sql_and_return_html, 
+  create_db_wrapper, 
+  execute_ddl_from_file, 
+  execute_ddl
+)
 
 # Load these variables from .env file.
 config_map = {
@@ -46,15 +53,20 @@ In the following exercises, write the SQL as requested to discover the answer.
 
 How many records are in the country table?
 
+
+
 ```{python}
 # How many records are in the world_bank_data.wdi_country table?
+
+
+
 # (skills: select, aggregate)
 
-run_sql_and_return_html(cnx,"""
-select
-  count(*) as "Row Count"
-from
-  world_bank_data.wdi_country
+run_sql_and_return_html(cnx, """
+SELECT
+  COUNT(*) AS "Row Count"
+FROM
+  world_bank_data.wdi_country;
 """)
 
 ```
@@ -68,12 +80,12 @@ Explore the first 5 records in the country table.
 ## Do you see any blanks or missing data?
 ## (skills: select, limit)
 
-run_sql_and_return_html(cnx,"""
-select
+run_sql_and_return_html(cnx, """
+SELECT
   *
-from 
+FROM 
   world_bank_data.wdi_country
-limit 5
+LIMIT 5;
 """)
 
 ```
@@ -85,14 +97,28 @@ List all non-countries.
 
 ```{python}
 ## task 3
-## Which records are NOT for countries, that is they're for regions or groups of countries.
+## Which records are NOT for countries, that is they're for regions or groups of countries?
+
+
+
 ## How can you tell?
 ## Once you figure it out, write a query to list all the non-countries
 ## (skills: select, where)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  country_code    AS `Code`,
+  short_name      AS `Name`,
+  region          AS `Region`
+FROM
+  world_bank_data.wdi_country
+WHERE
+  region = ''       -- blank or NULL region are aggregates/non-countries
+  OR region IS NULL
+ORDER BY
+  `Name`;
 """)
+
 ```
 
 ## Task 4
@@ -108,22 +134,33 @@ Create your own copy of WDI_Country containing just countries.
 ## (skills: select, aggregate)
 
 # drop table
-execute_ddl(cnx,"""
-drop table if exists wdi_country;
+execute_ddl(cnx, """
+DROP TABLE IF EXISTS wdi_country_clean;
 """)
+
 ```
 
 ```{python}
 # create table
-execute_ddl(cnx,"""
+execute_ddl(cnx, """
+CREATE TABLE wdi_country_clean AS
+SELECT *
+  FROM world_bank_data.wdi_country
+ WHERE region <> ''
+   AND region IS NOT NULL;
 """)
+
 ```
 
 ```{python}
 # show number of records
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  COUNT(*) AS "Country Count"
+FROM
+  wdi_country_clean;
 """)
+
 ```
 
 ## Task 5
@@ -133,8 +170,13 @@ According to the World Bank, in 2020 there were how many countries in the world?
 ```{python}
 ## (skills: select, aggregate)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  COUNT(DISTINCT `Country Code`) AS `Countries in 2020`
+FROM
+  wdi_data
+WHERE
+  Year = 2020;
 """)
 
 ```
@@ -150,8 +192,13 @@ What are all unique values of region in the wdi_country table?
 ## (there are several possible ways to code this in SQL)
 ## (skills: select, aggregate, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  DISTINCT region AS `Region`
+FROM
+  wdi_country
+ORDER BY
+  region;
 """)
 
 ```
@@ -164,8 +211,18 @@ How many countries are in each region?
 ## How many countries are in each region?
 ## (skills: select, aggregate, group by, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  region       AS `Region`,
+  COUNT(*)     AS `Country Count`
+FROM
+  wdi_country
+WHERE
+  region <> '' AND region IS NOT NULL
+GROUP BY
+  region
+ORDER BY
+  `Country Count` DESC;
 """)
 
 ```
@@ -178,8 +235,16 @@ List the country full names and regions for all countries in north america.
 ## List the country full names and regions for all countries in north america
 ## (skills: select, where, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  short_name AS `Country`,
+  region     AS `Region`
+FROM
+  wdi_country
+WHERE
+  region = 'North America'
+ORDER BY
+  short_name;
 """)
 
 ```
@@ -191,8 +256,15 @@ select "doh!" as "Homer says ..." from dual
 ## What region contains Qatar?  List the region, country short name and full name
 ## (skills: select, where)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  region           AS `Region`,
+  short_name       AS `Short Name`,
+  long_name        AS `Full Name`
+FROM
+  wdi_country
+WHERE
+  short_name = 'Qatar';
 """)
 
 ```
@@ -205,8 +277,19 @@ select "doh!" as "Homer says ..." from dual
 ## where the abbr and wb_abbr are different.
 ## (skills: select, where, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  country_code     AS `Code`,
+  short_name       AS `Short Name`,
+  country_abbr     AS `Abbr`,
+  country_wb_abbr  AS `WB Abbr`,
+  region           AS `Region`
+FROM
+  wdi_country
+WHERE
+  country_abbr    <> country_wb_abbr
+ORDER BY
+  country_code;
 """)
 
 ```
@@ -219,8 +302,19 @@ select "doh!" as "Homer says ..." from dual
 ## income category in descending order of most countries to least.
 ## (skills: select, aggregate, group by, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  income_level           AS `Income Category`,
+  COUNT(*)               AS `Country Count`
+FROM
+  wdi_country
+WHERE
+  region <> ''           -- only real countries
+  AND region IS NOT NULL
+GROUP BY
+  income_level
+ORDER BY
+  `Country Count` DESC;
 """)
 
 ```
@@ -234,9 +328,27 @@ select "doh!" as "Homer says ..." from dual
 ## you will be scored on the number of records returned and the value(s) 
 ## in the first column.
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH counts AS (
+  SELECT
+    income_level,
+    COUNT(*) AS cnt
+  FROM wdi_country
+  WHERE region <> '' AND region IS NOT NULL
+  GROUP BY income_level
+)
+SELECT
+  wc.short_name       AS `Country`,
+  wc.income_level     AS `Income Level`
+FROM
+  wdi_country wc
+  JOIN counts c ON wc.income_level = c.income_level
+WHERE
+  c.cnt = (SELECT MIN(cnt) FROM counts)
+ORDER BY
+  wc.short_name;
 """)
+
 
 ```
 
@@ -248,7 +360,10 @@ select "doh!" as "Homer says ..." from dual
 ## Write an update comment to correct the issue.
 ## NOTE - if you get this wrong, all subsequent tables will be wrong!
 
-execute_ddl(cnx,"""
+execute_ddl(cnx, """
+UPDATE wdi_country
+   SET income_level = 'High income'
+ WHERE country_code = 'QAT';
 """)
 
 
@@ -256,8 +371,15 @@ execute_ddl(cnx,"""
 ```{python}
 ## Now, display the country again to verify the change stuck!
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  country_code    AS `Code`,
+  short_name      AS `Name`,
+  income_level    AS `Income Level`
+FROM
+  wdi_country
+WHERE
+  country_code = 'QAT';
 """)
 
 ```
@@ -270,8 +392,19 @@ select "doh!" as "Homer says ..." from dual
 ## region, income group, and no.of.countries.
 ## (skills: select, aggregate, group by, order by)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  region               AS `Region`,
+  income_level         AS `Income Group`,
+  COUNT(*)             AS `No. of Countries`
+FROM
+  wdi_country
+WHERE
+  region <> '' AND region IS NOT NULL
+GROUP BY
+  region, income_level
+ORDER BY
+  region, income_level;
 """)
 
 ```
@@ -291,8 +424,23 @@ select "doh!" as "Homer says ..." from dual
 ## and a column for the row totals.
 ## (skills: select, aggregate, group by, nested query)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH base AS (
+  SELECT region, income_level, COUNT(*) AS cnt
+    FROM wdi_country
+   WHERE region <> '' AND region IS NOT NULL
+   GROUP BY region, income_level
+)
+SELECT
+  region                                    AS `Region`,
+  SUM(CASE WHEN income_level = 'High income'         THEN cnt ELSE 0 END) AS `High income`,
+  SUM(CASE WHEN income_level = 'Upper middle income' THEN cnt ELSE 0 END) AS `Upper middle income`,
+  SUM(CASE WHEN income_level = 'Lower middle income' THEN cnt ELSE 0 END) AS `Lower middle income`,
+  SUM(CASE WHEN income_level = 'Low income'          THEN cnt ELSE 0 END) AS `Low income`,
+  SUM(cnt)                                               AS `Row Total`
+FROM base
+GROUP BY region
+ORDER BY region;
 """)
 
 ```
@@ -311,8 +459,21 @@ select "doh!" as "Homer says ..." from dual
 ## PUT THE NUMBER FIRST! (use: count, region name, income group)
 ## (skills: select, aggregate, group by, nested query, order by, limit)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  COUNT(*)       AS `Low Income Count`,
+  region         AS `Region`,
+  'Low income'   AS `Income Group`
+FROM
+  wdi_country
+WHERE
+  income_level = 'Low income'
+  AND region <> '' AND region IS NOT NULL
+GROUP BY
+  region
+ORDER BY
+  `Low Income Count` DESC
+LIMIT 1;
 """)
 
 ```
@@ -328,8 +489,27 @@ select "doh!" as "Homer says ..." from dual
 ## the country code for the Marshall Islands is MHL.
 ## (skills: select, where, subquery)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+SELECT
+  wc.country_code    AS `Code`,
+  wc.short_name      AS `Name`,
+  wc.region          AS `Region`,
+  wc.income_level    AS `Income Level`
+FROM
+  wdi_country wc
+WHERE
+  wc.region = (
+    SELECT region
+      FROM wdi_country
+     WHERE country_code = 'MHL'
+  )
+  AND wc.income_level = (
+    SELECT income_level
+      FROM wdi_country
+     WHERE country_code = 'MHL'
+  )
+ORDER BY
+  wc.short_name;
 """)
 
 ```
@@ -353,8 +533,31 @@ select "doh!" as "Homer says ..." from dual
 ## in Task 14.  (FYI - I get 6 rows in my final table.)
 ## (skills: select, where, subqueries, joins)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH regions AS (
+  SELECT DISTINCT region
+    FROM wdi_country
+   WHERE region <> '' AND region IS NOT NULL
+),
+incats AS (
+  SELECT DISTINCT income_level
+    FROM wdi_country
+)
+SELECT
+  r.region            AS `Region`,
+  i.income_level      AS `Income Level`
+FROM
+  regions r
+CROSS JOIN
+  incats i
+LEFT JOIN
+  wdi_country wc
+    ON wc.region = r.region
+   AND wc.income_level = i.income_level
+WHERE
+  wc.country_code IS NULL
+ORDER BY
+  r.region, i.income_level;
 """)
 
 ```
@@ -377,8 +580,36 @@ select "doh!" as "Homer says ..." from dual
 ## slam dunk after this!
 ## (skills: select, where, subqueries, joins, aggregate functions)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH pair_counts AS (
+  SELECT
+    region,
+    income_level,
+    COUNT(*) AS cnt
+  FROM
+    wdi_country
+  WHERE
+    region <> '' AND region IS NOT NULL
+  GROUP BY region, income_level
+),
+totals AS (
+  SELECT
+    SUM(cnt) AS total_countries
+  FROM
+    pair_counts
+)
+SELECT
+  pc.region           AS `Region`,
+  pc.income_level     AS `Income Group`,
+  pc.cnt              AS `Count`,
+  t.total_countries   AS `Total Countries`,
+  ROUND(100.0 * pc.cnt / t.total_countries,2) AS `Percent of Total`
+FROM
+  pair_counts pc
+CROSS JOIN
+  totals t
+ORDER BY
+  pc.region, pc.income_level;
 """)
 
 
@@ -391,8 +622,38 @@ select "doh!" as "Homer says ..." from dual
 ## print table similar to the table in Task 15, with Income group in the
 ## columns, Region in the rows and Percent of total in each cell of the table.
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH pair_pct AS (
+  SELECT
+    region,
+    income_level,
+    COUNT(*) AS cnt
+  FROM
+    wdi_country
+  WHERE
+    region <> '' AND region IS NOT NULL
+  GROUP BY region, income_level
+),
+totals AS (
+  SELECT SUM(cnt) AS total_countries FROM pair_pct
+),
+pct AS (
+  SELECT
+    region,
+    income_level,
+    ROUND(100.0 * cnt / (SELECT total_countries FROM totals), 2) AS pct
+  FROM pair_pct
+)
+SELECT
+  region                     AS `Region`,
+  SUM(CASE WHEN income_level='High income'         THEN pct ELSE 0 END) AS `High income`,
+  SUM(CASE WHEN income_level='Upper middle income' THEN pct ELSE 0 END) AS `Upper middle income`,
+  SUM(CASE WHEN income_level='Lower middle income' THEN pct ELSE 0 END) AS `Lower middle income`,
+  SUM(CASE WHEN income_level='Low income'          THEN pct ELSE 0 END) AS `Low income`,
+  ROUND(SUM(pct),2)                                                 AS `Row Total %`
+FROM pct
+GROUP BY region
+ORDER BY region;
 """)
 
 ```
@@ -406,8 +667,31 @@ select "doh!" as "Homer says ..." from dual
 
 ## (This is much simpler than task 20!)
 
-run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+run_sql_and_return_html(cnx, """
+WITH incount AS (
+  SELECT
+    income_level,
+    COUNT(*) AS cnt
+  FROM
+    wdi_country
+  WHERE
+    region <> '' AND region IS NOT NULL
+  GROUP BY income_level
+),
+total AS (
+  SELECT SUM(cnt) AS tot FROM incount
+)
+SELECT
+  ic.income_level       AS `Income Level`,
+  ic.cnt                AS `Count`,
+  t.tot                 AS `Total Countries`,
+  ROUND(100.0 * ic.cnt / t.tot,2) AS `Percent`
+FROM
+  incount ic
+CROSS JOIN
+  total t
+ORDER BY
+  ic.cnt DESC;
 """)
 
 ```
@@ -415,28 +699,17 @@ select "doh!" as "Homer says ..." from dual
 
 # Reflection
 
-1. Reflect on the SQL skills you used throughout these exercises. Which skills do you feel most confident in, and which do you think need more practice? How has this assignment helped you build or reinforce specific SQL competencies?
+(I think I am pretty good at thinking it through, but when it comes to making 
+them, it can get a bit challenging. This assignment has given me a good 
+amount of practice when it comes to making them.)
 
-( response goes here)
+(I didn't see a task 23 and 24, but when it comes to 18, I just kept working 
+on it until I could get it to work out for me. I would probably try and think it 
+through more.)
 
-2. Problem-Solving Approach: Describe your approach to tackling the more complex tasks (like Tasks 18, 23, and 24). How did you break down these problems, and what steps did you take when you encountered challenges? How would you approach a similar problem differently in the future?
-
-( response goes here)
-
-
-3. Learning Takeaways: Consider the overall learning experience from this assignment. What were the biggest takeaways about working with SQL for data analysis and transformation? How do you think these skills will apply in real-world scenarios or future coursework?
-
-( response goes here)
-
-
-# README
-
-A quality README is an important part of EVERY project. Using the Quarto *include* command we're including a copy of your README in the project report so that a human can evaluate it.
-
-Make sure that you edit the README so that it's explanatory!  Note that you don't need a readme within the *reports* folder for this assignment. We're only
-focused on the root *README.md*.
-
-[Here is some info](https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/) on how to write a good README!
+(The key takeaways are that a lot of the world works around databases. Everywhere 
+you look, the information has some connection with a database. These skills can 
+be used in every company you can think of.)
 
 ::: {style="background:lightgray; margin-left:20px; border-top: 3px solid black; border-bottom: 3px solid black; padding-left:20px; padding-right:20px"}
 {{< include ../README.md >}}
