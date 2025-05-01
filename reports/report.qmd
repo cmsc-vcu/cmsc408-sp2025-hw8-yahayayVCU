@@ -696,6 +696,19 @@ ORDER BY
 
 ```
 
+# README
+
+A quality README is an important part of EVERY project. Using the Quarto *include* command we're including a copy of your README in the project report so that a human can evaluate it.
+
+Make sure that you edit the README so that it's explanatory!  Note that you don't need a readme within the *reports* folder for this assignment. We're only
+focused on the root *README.md*.
+
+[Here is some info](https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/) on how to write a good README!
+
+::: {style="background:lightgray; margin-left:20px; border-top: 3px solid black; border-bottom: 3px solid black; padding-left:20px; padding-right:20px"}
+{{< include ../README.md >}}
+:::
+
 
 # Reflection
 
@@ -711,7 +724,4 @@ through more.)
 you look, the information has some connection with a database. These skills can 
 be used in every company you can think of.)
 
-::: {style="background:lightgray; margin-left:20px; border-top: 3px solid black; border-bottom: 3px solid black; padding-left:20px; padding-right:20px"}
-{{< include ../README.md >}}
-:::
 
